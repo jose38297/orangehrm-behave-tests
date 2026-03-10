@@ -45,17 +45,40 @@ jobs:
           pip install chromedriver-binary-auto
         shell: pwsh
 
-      - name: Verification versions Chrome et ChromeDriver
+      - name: Mise a jour Chrome pour matcher ChromeDriver
         run: |
           $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-          if (Test-Path $chromePath) {
-            Write-Host "Chrome trouve: $chromePath"
-            & $chromePath --version
-          } else {
-            Write-Host "Chrome non trouve au chemin par defaut"
-          }
+          Write-Host "Version Chrome actuelle:"
+          & $chromePath --version
+          Write-Host "Version ChromeDriver installe:"
           chromedriver --version
+          $chromeVersion = (& $chromePath --version) -replace "Google Chrome ", ""
+          $driverVersion = (chromedriver --version) -replace "ChromeDriver ", "" -replace " .*", ""
+          Write-Host "Chrome: $chromeVersion"
+          Write-Host "Driver: $driverVersion"
+          $chromeMajor = ($chromeVersion -split "\.")[0]
+          $driverMajor = ($driverVersion -split "\.")[0]
+          if ($chromeMajor -ne $driverMajor) {
+            Write-Host "Versions differentes - mise a jour Chrome vers version compatible"
+            $installerUrl = "https://storage.googleapis.com/chrome-for-testing-public/$driverVersion/win64/chrome-win64.zip"
+            Write-Host "Tentative telechargement: $installerUrl"
+          }
         shell: pwsh
+        continue-on-error: true
+
+      - name: Installation Chrome compatible via Selenium Manager
+        run: |
+          python -c "
+          from selenium import webdriver
+          from selenium.webdriver.chrome.service import Service
+          import subprocess
+          import os
+          result = subprocess.run(['selenium-manager', '--browser', 'chrome', '--output', 'json'], capture_output=True, text=True)
+          print(result.stdout)
+          print(result.stderr)
+          "
+        shell: pwsh
+        continue-on-error: true
 
       - name: Creation des dossiers de rapports
         run: |
@@ -76,6 +99,7 @@ jobs:
           EXPLICIT_WAIT: '40'
           PYTHONUTF8: '1'
           PYTHONIOENCODING: 'utf-8'
+          SE_AVOID_STATS: 'true'
         run: |
           [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           if ("${{ github.event.inputs.tags }}" -ne "") {

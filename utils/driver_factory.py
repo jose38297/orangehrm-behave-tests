@@ -1,4 +1,3 @@
-import chromedriver_binary
 from selenium import webdriver
 from utils.config import Config
 
@@ -22,6 +21,7 @@ class DriverFactory:
             options.add_experimental_option(
                 "excludeSwitches", ["enable-logging"]
             )
+            # Selenium Manager gere automatiquement ChromeDriver
             driver = webdriver.Chrome(options=options)
         else:
             raise ValueError(f"Navigateur non supporte: {browser}")
