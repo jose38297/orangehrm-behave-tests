@@ -1,4 +1,4 @@
-# OrangeHRM Selenium Behave Tests
+venv\Scripts\activate# OrangeHRM Selenium Behave Tests
 
 Projet de tests automatises Selenium + Behave (BDD) pour OrangeHRM Demo.
 URL cible : https://opensource-demo.orangehrmlive.com
