@@ -23,19 +23,20 @@ class DriverFactory:
             options.add_argument("--window-size=1920,1080")
             options.add_argument("--disable-notifications")
             options.add_argument("--remote-debugging-port=9222")
+            options.add_argument("--disable-extensions")
             options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-            chrome_path = os.environ.get("CHROME_PATH", "")
-            if chrome_path:
-                options.binary_location = chrome_path
+            # Supprime le ChromeDriver du PATH pour eviter les conflits de version
+            clean_path = os.environ.get("PATH", "")
+            filtered = [
+                p for p in clean_path.split(os.pathsep)
+                if "SeleniumWebDrivers" not in p and "chromedriver" not in p.lower()
+            ]
+            os.environ["PATH"] = os.pathsep.join(filtered)
 
-            try:
-                driver = webdriver.Chrome(
-                    service=ChromeService(ChromeDriverManager().install()),
-                    options=options
-                )
-            except Exception:
-                driver = webdriver.Chrome(options=options)
+            # Telecharge le bon ChromeDriver automatiquement
+            service = ChromeService(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
 
         elif browser.lower() == "firefox":
             options = webdriver.FirefoxOptions()

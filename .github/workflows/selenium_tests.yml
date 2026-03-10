@@ -49,8 +49,15 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Verification Chrome
-        run: chrome --version
+      - name: Suppression ChromeDriver conflictuel du PATH
+        run: |
+          $cleanPath = ($env:PATH -split ';' | Where-Object {
+            $_ -notmatch 'SeleniumWebDrivers' -and
+            $_ -notmatch 'chromedriver' -and
+            $_ -notmatch 'ChromeDriver'
+          }) -join ';'
+          echo "PATH=$cleanPath" >> $env:GITHUB_ENV
+          Write-Host "PATH nettoye avec succes"
         shell: pwsh
 
       - name: Creation des dossiers de rapports
