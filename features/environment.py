@@ -2,6 +2,10 @@ import os
 from utils.driver_factory import DriverFactory
 from pages.login_page import LoginPage
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'steps'))
 
 def before_all(context):
     os.makedirs("reports/screenshots", exist_ok=True)
