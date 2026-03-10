@@ -42,13 +42,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install chromedriver-binary-auto
         shell: pwsh
 
-      - name: Verification Chrome et ChromeDriver disponibles
+      - name: Installation de Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Verification versions
         run: |
-          Write-Host "Chrome: $env:CHROME_BIN"
-          Write-Host "ChromeDriver: $env:CHROMEWEBDRIVER"
-          Get-ChildItem "$env:CHROMEWEBDRIVER"
+          chrome --version
+          chromedriver --version
         shell: pwsh
 
       - name: Creation des dossiers de rapports
@@ -68,11 +73,14 @@ jobs:
           HEADLESS: 'true'
           IMPLICIT_WAIT: '15'
           EXPLICIT_WAIT: '40'
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: 'utf-8'
         run: |
+          [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
           if ("${{ github.event.inputs.tags }}" -ne "") {
-            behave --tags=${{ github.event.inputs.tags }} --junit --junit-directory=reports/junit -f pretty
+            python -X utf8 -m behave --tags=${{ github.event.inputs.tags }} --junit --junit-directory=reports/junit -f pretty
           } else {
-            behave --tags=${{ matrix.test_suite }} --junit --junit-directory=reports/junit -f pretty
+            python -X utf8 -m behave --tags=${{ matrix.test_suite }} --junit --junit-directory=reports/junit -f pretty
           }
         shell: pwsh
         continue-on-error: true
