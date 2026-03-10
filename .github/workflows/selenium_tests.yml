@@ -1,0 +1,112 @@
+name: OrangeHRM Selenium Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 8 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Tags Behave a executer (employee, leave, timesheet, search)'
+        required: false
+        default: ''
+      browser:
+        description: 'Navigateur (chrome ou firefox)'
+        required: false
+        default: 'chrome'
+
+jobs:
+  test:
+    name: Run Selenium Behave Tests - ${{ matrix.test_suite }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test_suite: [employee, leave, timesheet, search]
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Configuration Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Installation des dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Creation des dossiers de rapports
+        run: |
+          New-Item -ItemType Directory -Force -Path reports\screenshots
+          New-Item -ItemType Directory -Force -Path reports\junit
+        shell: pwsh
+
+      - name: Execution des tests - ${{ matrix.test_suite }}
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          EMPLOYEE_USERNAME: ${{ secrets.EMPLOYEE_USERNAME }}
+          EMPLOYEE_PASSWORD: ${{ secrets.EMPLOYEE_PASSWORD }}
+          BROWSER: ${{ github.event.inputs.browser || 'chrome' }}
+          HEADLESS: 'true'
+        run: |
+          if ("${{ github.event.inputs.tags }}" -ne "") {
+            behave --tags=${{ github.event.inputs.tags }} --junit --junit-directory=reports/junit -f pretty
+          } else {
+            behave --tags=${{ matrix.test_suite }} --junit --junit-directory=reports/junit -f pretty
+          }
+        shell: pwsh
+        continue-on-error: true
+
+      - name: Upload des screenshots en cas d'echec
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-${{ matrix.test_suite }}
+          path: reports\screenshots\
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload des rapports JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-reports-${{ matrix.test_suite }}
+          path: reports\junit\
+          if-no-files-found: ignore
+          retention-days: 14
+
+  report:
+    name: Rapport consolide
+    runs-on: windows-latest
+    needs: test
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Telechargement de tous les rapports JUnit
+        uses: actions/download-artifact@v4
+        with:
+          pattern: junit-reports-*
+          path: all-reports
+          merge-multiple: true
+
+      - name: Publication des resultats de tests
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: 'Resultats Tests Selenium Behave'
+          path: 'all-reports/**/*.xml'
+          reporter: java-junit
+          fail-on-error: false
