@@ -1,6 +1,5 @@
-import os
+import chromedriver_binary
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
 from utils.config import Config
 
 
@@ -11,8 +10,6 @@ class DriverFactory:
         headless = headless if headless is not None else Config.HEADLESS
 
         if browser.lower() == "chrome":
-            import chromedriver_binary
-
             options = webdriver.ChromeOptions()
             if headless:
                 options.add_argument("--headless=new")
@@ -25,9 +22,7 @@ class DriverFactory:
             options.add_experimental_option(
                 "excludeSwitches", ["enable-logging"]
             )
-
             driver = webdriver.Chrome(options=options)
-
         else:
             raise ValueError(f"Navigateur non supporte: {browser}")
 

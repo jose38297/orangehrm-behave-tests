@@ -45,14 +45,15 @@ jobs:
           pip install chromedriver-binary-auto
         shell: pwsh
 
-      - name: Installation de Chrome
-        uses: browser-actions/setup-chrome@v1
-        with:
-          chrome-version: stable
-
-      - name: Verification versions
+      - name: Verification versions Chrome et ChromeDriver
         run: |
-          chrome --version
+          $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+          if (Test-Path $chromePath) {
+            Write-Host "Chrome trouve: $chromePath"
+            & $chromePath --version
+          } else {
+            Write-Host "Chrome non trouve au chemin par defaut"
+          }
           chromedriver --version
         shell: pwsh
 
