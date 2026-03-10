@@ -101,6 +101,7 @@ jobs:
           pattern: junit-reports-*
           path: all-reports
           merge-multiple: true
+        continue-on-error: true
 
       - name: Publication des resultats de tests
         uses: dorny/test-reporter@v1
@@ -110,3 +111,4 @@ jobs:
           path: 'all-reports/**/*.xml'
           reporter: java-junit
           fail-on-error: false
+        continue-on-error: true
