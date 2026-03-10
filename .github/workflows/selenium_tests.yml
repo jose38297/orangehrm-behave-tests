@@ -68,6 +68,8 @@ jobs:
           EMPLOYEE_PASSWORD: ${{ secrets.EMPLOYEE_PASSWORD }}
           BROWSER: chrome
           HEADLESS: 'true'
+          IMPLICIT_WAIT: '15'
+          EXPLICIT_WAIT: '40'
           WDM_LOCAL: '1'
         run: |
           if ("${{ github.event.inputs.tags }}" -ne "") {

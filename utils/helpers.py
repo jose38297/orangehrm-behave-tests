@@ -14,6 +14,7 @@ class Helpers:
     def __init__(self, driver):
         self.driver = driver
         self.wait = WebDriverWait(driver, Config.EXPLICIT_WAIT)
+        self.timeout = Config.EXPLICIT_WAIT
 
     def wait_for_element(self, locator, timeout=None):
         t = timeout or Config.EXPLICIT_WAIT
